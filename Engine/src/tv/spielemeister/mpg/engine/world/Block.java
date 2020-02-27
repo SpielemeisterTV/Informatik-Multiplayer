@@ -8,8 +8,16 @@ public class Block {
         return blockData[(x << 6) + (y << 4) + z];
     }
 
-    public void setTile(int x, int y, int z, char tile){ // x: 0-15, y: 0-15, z: 0-3
-        blockData[(x << 6) + (y << 4) + z] = tile;
+    public void setTile(int x, int y, int z, char tileData){ // x: 0-15, y: 0-15, z: 0-3
+        blockData[(x << 6) + (y << 4) + z] = tileData;
+    }
+
+    public boolean setBlockData(char[] blockData){
+        if(blockData.length == 1024){
+            this.blockData = blockData;
+            return true;
+        }
+        return false;
     }
 
 }
