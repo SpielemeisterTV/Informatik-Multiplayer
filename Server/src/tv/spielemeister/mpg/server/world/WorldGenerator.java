@@ -1,4 +1,7 @@
 package tv.spielemeister.mpg.server.world;
 
-public class WorldGenerator {
+class WorldGenerator {
+
+
+
 }

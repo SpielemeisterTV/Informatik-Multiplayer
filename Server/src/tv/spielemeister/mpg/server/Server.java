@@ -9,7 +9,7 @@ import java.util.Properties;
 
 public class Server {
 
-    Config config;
+    private Config config;
 
     File worldsDirectory;
 
@@ -18,7 +18,7 @@ public class Server {
     public Server(){
         initConfig();
         setupFiles();
-        worldManager = new WorldManager(worldsDirectory);
+        worldManager = new WorldManager(worldsDirectory, config.getProperty("Overworld world name"));
     }
 
     private void initConfig(){
