@@ -9,6 +9,8 @@ public class WorldManager {
 
     private String overworldName;
 
+    private int id_counter = 0;
+
     private HashMap<String, LinkedWorld> loadedWorlds = new HashMap<>();
 
     public WorldManager(File worldsDirectory, String overworldName){
@@ -20,13 +22,21 @@ public class WorldManager {
         File worldDirectory = new File(worldsDirectory, name);
         if(worldDirectory.exists()){
             if(worldDirectory.isDirectory()) {
-                loadedWorlds.put(name, new LinkedWorld(worldDirectory));
-                return false;
+                LinkedWorld world = new LinkedWorld(worldDirectory, id_counter);
+                if(world.init()) {
+                    loadedWorlds.put(name, world);
+                    id_counter++;
+                    return true;
+                }
             }
         }
         if(worldDirectory.mkdirs()){
-            loadedWorlds.put(name, new LinkedWorld(worldDirectory));
-            return true;
+            LinkedWorld world = new LinkedWorld(worldDirectory, id_counter);
+            if(world.init()) {
+                loadedWorlds.put(name, world);
+                id_counter++;
+                return true;
+            }
         }
         return false;
     }
@@ -34,11 +44,30 @@ public class WorldManager {
     public boolean unloadWorld(String name){
         if(!name.equals(overworldName)) {
             if(loadedWorlds.containsKey(name)){
-                loadedWorlds.get(name).unload();
-                loadedWorlds.remove(name);
+                if (loadedWorlds.get(name).save()) {
+                    loadedWorlds.remove(name);
+                    return true;
+                }
             }
         }
         return false;
+    }
+
+    public boolean saveWorld(String name){
+        if(loadedWorlds.containsKey(name)){
+            if (loadedWorlds.get(name).save()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean saveAll(){
+        boolean ret = true;
+        for(LinkedWorld world : loadedWorlds.values())
+            if(!world.save())
+                ret = false;
+        return ret;
     }
 
 }
