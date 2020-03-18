@@ -4,23 +4,39 @@ import java.util.HashMap;
 
 public class ItemStack {
 
-    private int itemType, amount;
-    private HashMap<Byte, Byte> attributes = new HashMap<>(8);
+    private int itemType, amount = 1;
+
+    private String itemName = null, lore = null;
 
     public ItemStack(int type){
         this.itemType = type;
     }
 
-    public HashMap<Byte, Byte> getAttributes(){
-        return attributes;
+    public int getItemType(){
+        return itemType;
     }
 
-    public void removeAttribute(byte key){
-        attributes.remove(key);
+    public int getAmount() {
+        return amount;
     }
 
-    public void setAttribute(byte key, byte value){
-        attributes.put(key, value);
+    public void setAmount(int amount) {
+        this.amount = amount;
     }
 
+    public String getItemName() {
+        return itemName;
+    }
+
+    public void setItemName(String itemName) {
+        this.itemName = itemName;
+    }
+
+    public String getLore() {
+        return lore;
+    }
+
+    public void setLore(String lore) {
+        this.lore = lore;
+    }
 }

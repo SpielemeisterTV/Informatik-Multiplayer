@@ -17,9 +17,10 @@ public class Entity {
     private Location location;
     private Vector velocity;
 
+    // A player can only see what other Entities have in their hand, not their whole hotbar
     private int handSlot = 0; // 0-7
-
-
+    ItemStack[] hotbar = new ItemStack[8]; // 0-7
+    ItemStack[] inventory = new ItemStack[24]; // 3 * 8
 
     public Entity(int entityType, long id, Location location){
         this.entityType = entityType;
@@ -29,9 +30,50 @@ public class Entity {
 
     public static Entity load(File file){
         try {
-            FileReader reader = new FileReader(file);
-
-        } catch (FileNotFoundException e) {
+            if(!file.exists()){
+                return null;
+            }
+            Entity entity = new Entity(0, Long.valueOf(file.getName()), null);
+            Location location = new Location(0, 0, 0, 0);
+            Vector velocity = new Vector(0, 0);
+            BufferedReader reader = new BufferedReader(new FileReader(file));
+            String line;
+            for(int x = 0; x < 9 && (line = reader.readLine()) != null; x++){
+                switch(x){
+                    case 0:
+                        entity.setDisplayName(line);
+                        break;
+                    case 1:
+                        entity.entityType = Integer.parseInt(line);
+                        break;
+                    case 2:
+                        location.setWorld(Integer.parseInt(line));
+                        break;
+                    case 3:
+                        location.setX(Double.parseDouble(line));
+                        break;
+                    case 4:
+                        location.setY(Double.parseDouble(line));
+                        break;
+                    case 5:
+                        location.setRotation(Float.parseFloat(line));
+                        break;
+                    case 6:
+                        velocity.setX(Double.parseDouble(line));
+                        break;
+                    case 7:
+                        velocity.setY(Double.parseDouble(line));
+                        break;
+                    case 8:
+                        entity.handSlot = Integer.parseInt(line);
+                        break;
+                }
+            }
+            entity.setLocation(location);
+            entity.setVelocity(velocity);
+            for(int x = 0; x < 9)
+            return entity;
+        } catch (IOException e) {
             e.printStackTrace();
         }
         return null;
@@ -42,7 +84,6 @@ public class Entity {
             PrintStream out = new PrintStream(file);
             out.println(displayName);
             out.println(entityType);
-            out.println(id);
             out.println(location.getWorld());
             out.println(location.getX());
             out.println(location.getY());
@@ -50,6 +91,18 @@ public class Entity {
             out.println(velocity.getX());
             out.println(velocity.getY());
             out.println(handSlot);
+            for(int i = 0; i < 9; i++){
+                ItemStack x = hotbar[i];
+                if(x == null){
+                    continue;
+                }
+                out.println(i);
+                out.println(x.getItemType());
+                out.println(x.getAmount());
+                out.println(x.getItemName());
+                out.println(x.getLore());
+            }
+            // TODO: Add Inventory & hotbar
 
         } catch (FileNotFoundException e) {
             e.printStackTrace();

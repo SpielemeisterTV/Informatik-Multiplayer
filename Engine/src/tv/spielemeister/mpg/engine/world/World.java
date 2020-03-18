@@ -1,6 +1,5 @@
 package tv.spielemeister.mpg.engine.world;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 
 public class World { // 2**16 * 2**16 Blocks (65’536‬**2 = 4’294’967’296‬)
