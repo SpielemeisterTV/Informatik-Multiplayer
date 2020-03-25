@@ -8,7 +8,7 @@ import tv.spielemeister.mpg.server.world.WorldManager;
 import java.io.*;
 import java.util.*;
 
-public class Server {
+public class Server implements Runnable {
 
     private static Server instance;
 
@@ -89,9 +89,9 @@ public class Server {
     }
 
     public boolean saveAll(){
-        boolean ret = worldManager.saveAll();
-
-        return ret;
+        for(Entity entity : loadedEntities.keySet())
+            saveEntity(entity);
+        return worldManager.saveAll();
     }
 
     private void loadEntities(int world, int blockX, int blockY){
@@ -120,4 +120,12 @@ public class Server {
         return instance;
     }
 
+    @Override
+    public void run() {
+        double timePassed = 0;
+        double deltaTime = 0;
+
+        //TODO: Tick
+
+    }
 }
