@@ -8,7 +8,7 @@ import tv.spielemeister.mpg.server.world.WorldManager;
 import java.io.*;
 import java.util.*;
 
-public class Server implements Runnable {
+public class Server {
 
     private static Server instance;
 
@@ -32,10 +32,6 @@ public class Server implements Runnable {
         worldManager = new WorldManager(worldsDirectory, config.getProperty("Overworld world name"));
     }
 
-    private void tick(){ // Introducing time
-
-    }
-
     private void initConfig(){
         Properties configDefaults = new Properties();
         configDefaults.putAll(Map.ofEntries(
@@ -55,10 +51,15 @@ public class Server implements Runnable {
         }
     }
 
-    public void incrementEntityCount(){
+    public long getNewEntityID(){
+        incrementEntityCount();
+        return entityCount-1;
+    }
+
+    private void incrementEntityCount(){
         try {
             globalData.seek(0);
-            globalData.writeLong(entityCount);
+            globalData.writeLong(++entityCount);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -118,14 +119,5 @@ public class Server implements Runnable {
 
     public static Server getInstance(){
         return instance;
-    }
-
-    @Override
-    public void run() {
-        double timePassed = 0;
-        double deltaTime = 0;
-
-        //TODO: Tick
-
     }
 }

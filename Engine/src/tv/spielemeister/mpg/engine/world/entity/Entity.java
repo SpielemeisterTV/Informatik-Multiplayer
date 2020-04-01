@@ -6,9 +6,9 @@ import tv.spielemeister.mpg.engine.world.Vector;
 import java.io.*;
 import java.util.HashMap;
 
-import static tv.spielemeister.mpg.engine.Global.split;
-
 public class Entity {
+
+    private final static String split = "#&%";
 
     private HashMap<String, String> tags = new HashMap<>();
 

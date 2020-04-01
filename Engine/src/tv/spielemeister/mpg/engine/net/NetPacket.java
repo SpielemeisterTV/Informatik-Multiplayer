@@ -11,6 +11,6 @@ public abstract class NetPacket {
 
     protected abstract void parse(byte[] data);
 
-    public abstract byte[] encode();
+    public abstract byte[] encode(); // The first byte has to be the packetType
 
 }

@@ -43,7 +43,12 @@ public abstract class DataHandler implements Runnable{
 
     public boolean send(NetPacket packet){
         if(running){
-
+            try {
+                outputStream.write(packet.encode());
+                outputStream.flush();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
         return false;
     }
