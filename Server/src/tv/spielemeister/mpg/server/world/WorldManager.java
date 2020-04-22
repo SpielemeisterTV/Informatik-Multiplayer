@@ -5,13 +5,13 @@ import java.util.HashMap;
 
 public class WorldManager {
 
-    private File worldsDirectory;
+    private final File worldsDirectory;
 
-    private String overworldName;
+    private final String overworldName;
 
     private int id_counter = 0;
 
-    private HashMap<String, LinkedWorld> loadedWorlds = new HashMap<>();
+    private final HashMap<String, LinkedWorld> loadedWorlds = new HashMap<>();
 
     public WorldManager(File worldsDirectory, String overworldName){
         this.worldsDirectory = worldsDirectory;

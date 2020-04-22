@@ -3,12 +3,16 @@ package tv.spielemeister.mpg.engine.world.entity;
 import tv.spielemeister.mpg.engine.world.Location;
 import tv.spielemeister.mpg.engine.world.Vector;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.StandardOpenOption;
 import java.util.HashMap;
 
 public class Entity {
 
-    private final static String split = "#&%";
+    private final static String linesplit = "§§", split = "§";
 
     private HashMap<String, String> tags = new HashMap<>();
 
@@ -31,81 +35,83 @@ public class Entity {
         this.location = location;
     }
 
+    public static Entity load(String entityString){
+        String[] entityData = entityString.split(linesplit);
+        Location location = new Location(0, 0, 0, 0);
+        Vector velocity = new Vector(0, 0);
+
+        Entity entity = new Entity(0, Long.parseLong(entityData[0]), null);
+        entity.setDisplayName(entityData[1]);
+        entity.entityType = Integer.parseInt(entityData[2]);
+        location.setWorld(Integer.parseInt(entityData[3]));
+        location.setX(Double.parseDouble(entityData[4]));
+        location.setY(Double.parseDouble(entityData[5]));
+        location.setRotation(Float.parseFloat(entityData[6]));
+        velocity.setX(Double.parseDouble(entityData[7]));
+        velocity.setY(Double.parseDouble(entityData[8]));
+        entity.parseTags(entityData[9]);
+        entity.handSlot = Integer.parseInt(entityData[10]);
+
+        entity.setLocation(location);
+        entity.setVelocity(velocity);
+
+        for(int i = 0; i < (entityData.length-11)/6; i++){
+            int index = (entityData.length + 11) + (i * 6);
+            int slot = Integer.parseInt(entityData[index++]);
+            ItemStack itemStack = new ItemStack(Integer.parseInt(entityData[index++]));
+            itemStack.setAmount(Integer.parseInt(entityData[index++]));
+            itemStack.setItemName(entityData[index++]);
+            itemStack.setLore(entityData[index++]);
+            itemStack.parseAttributes(entityData[index]);
+            if(slot < 0)
+                entity.hotbar[-slot-1] = itemStack;
+            else
+                entity.inventory[slot] = itemStack;
+        }
+        return entity;
+    }
+
+    public String save(){
+        StringBuilder builder = new StringBuilder();
+        builder.append(displayName).append(linesplit);
+        builder.append(entityType).append(linesplit);
+        builder.append(location.getWorld()).append(linesplit);
+        builder.append(location.getX()).append(linesplit);
+        builder.append(location.getY()).append(linesplit);
+        builder.append(location.getRotation()).append(linesplit);
+        builder.append(velocity.getX()).append(linesplit);
+        builder.append(velocity.getY()).append(linesplit);
+        builder.append(serializeTags()).append(linesplit);
+        builder.append(handSlot);
+        for(int i = 0; i < 9; i++){
+            ItemStack x = hotbar[i];
+            if(x == null)
+                continue;
+            builder.append(linesplit).append(-i-1).append(linesplit);
+            builder.append(x.getItemType()).append(linesplit);
+            builder.append(x.getAmount()).append(linesplit);
+            builder.append(x.getItemName()).append(linesplit);
+            builder.append(x.getLore()).append(linesplit);
+            builder.append(x.serializeAttributes());
+        }
+
+        for(int i = 0; i < 25; i++){
+            ItemStack x = inventory[i];
+            if(x == null)
+                continue;
+            builder.append(linesplit).append(i).append(linesplit);
+            builder.append(x.getItemType()).append(linesplit);
+            builder.append(x.getAmount()).append(linesplit);
+            builder.append(x.getItemName()).append(linesplit);
+            builder.append(x.getLore()).append(linesplit);
+            builder.append(x.serializeAttributes());
+        }
+        return builder.toString();
+    }
+
     public static Entity load(File file){
         try {
-            if(!file.exists()){
-                return null;
-            }
-            Entity entity = new Entity(0, Long.parseLong(file.getName()), null);
-            Location location = new Location(0, 0, 0, 0);
-            Vector velocity = new Vector(0, 0);
-            BufferedReader reader = new BufferedReader(new FileReader(file));
-            String line;
-            for(int x = 0; x < 10 && (line = reader.readLine()) != null; x++){
-                switch(x){
-                    case 0:
-                        entity.setDisplayName(line);
-                        break;
-                    case 1:
-                        entity.entityType = Integer.parseInt(line);
-                        break;
-                    case 2:
-                        location.setWorld(Integer.parseInt(line));
-                        break;
-                    case 3:
-                        location.setX(Double.parseDouble(line));
-                        break;
-                    case 4:
-                        location.setY(Double.parseDouble(line));
-                        break;
-                    case 5:
-                        location.setRotation(Float.parseFloat(line));
-                        break;
-                    case 6:
-                        velocity.setX(Double.parseDouble(line));
-                        break;
-                    case 7:
-                        velocity.setY(Double.parseDouble(line));
-                        break;
-                    case 8:
-                        entity.parseTags(line);
-                        break;
-                    case 9:
-                        entity.handSlot = Integer.parseInt(line);
-                        break;
-                }
-            }
-            entity.setLocation(location);
-            entity.setVelocity(velocity);
-            ItemStack stack = null;
-            int slot = 0;
-            for(int i = 0; (line = reader.readLine()) != null; i++){
-                switch(i % 6){
-                    case 0:
-                        slot = Integer.parseInt(line);
-                        break;
-                    case 1:
-                        stack = new ItemStack(Integer.parseInt(line));
-                        break;
-                    case 2:
-                        stack.setAmount(Integer.parseInt(line));
-                        break;
-                    case 3:
-                        stack.setItemName(line);
-                        break;
-                    case 4:
-                        stack.setLore(line);
-                        break;
-                    case 5:
-                        stack.parseAttributes(line);
-                        if(slot < 0)
-                            entity.hotbar[-slot-1] = stack;
-                        else
-                            entity.inventory[slot] = stack;
-                        break;
-                }
-            }
-            return entity;
+            return load(Files.readString(file.toPath()));
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -114,41 +120,8 @@ public class Entity {
 
     public void save(File file){
         try {
-            PrintStream out = new PrintStream(file);
-            out.println(displayName);
-            out.println(entityType);
-            out.println(location.getWorld());
-            out.println(location.getX());
-            out.println(location.getY());
-            out.println(location.getRotation());
-            out.println(velocity.getX());
-            out.println(velocity.getY());
-            out.println(serializeTags());
-            out.println(handSlot);
-            for(int i = 0; i < 9; i++){
-                ItemStack x = hotbar[i];
-                if(x == null)
-                    continue;
-                out.println(-i-1);
-                out.println(x.getItemType());
-                out.println(x.getAmount());
-                out.println(x.getItemName());
-                out.println(x.getLore());
-                out.println(x.serializeAttributes());
-            }
-
-            for(int i = 0; i < 25; i++){
-                ItemStack x = inventory[i];
-                if(x == null)
-                    continue;
-                out.println(i);
-                out.println(x.getItemType());
-                out.println(x.getAmount());
-                out.println(x.getItemName());
-                out.println(x.getLore());
-                out.println(x.serializeAttributes());
-            }
-        } catch (FileNotFoundException e) {
+            Files.writeString(file.toPath(), save(), StandardOpenOption.CREATE_NEW);
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }
@@ -198,8 +171,9 @@ public class Entity {
     }
 
     public void setTag(String key, String value){
-        tags.put(key.replaceAll(split, "").replaceAll("\n", ""),
-                value.replaceAll(split, "").replaceAll("\n", ""));
+        if(key != null && !key.equals("") && value != null && !value.equals("")
+                && !key.contains(split) && ! value.contains(split))
+            tags.put(key, value);
     }
 
     public HashMap<String, String> getTags() {

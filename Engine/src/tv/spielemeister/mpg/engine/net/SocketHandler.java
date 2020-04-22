@@ -1,15 +1,21 @@
 package tv.spielemeister.mpg.engine.net;
 
+import tv.spielemeister.mpg.engine.net.packets.PacketHandshakeRequest;
+import tv.spielemeister.mpg.engine.net.packets.PacketByteInformation;
+
 import java.io.*;
 import java.net.Socket;
+import java.util.Arrays;
 
-public abstract class DataHandler implements Runnable{
+public class SocketHandler implements Runnable{
 
     private static final Class<? extends NetPacket>[] packetIndex = new Class[]{
-
+            PacketHandshakeRequest.class,
+            PacketByteInformation.class
     };
 
-    private Socket socket;
+    public Socket socket;
+    private PacketHandler handler;
 
     private BufferedInputStream inputStream = null;
     private BufferedOutputStream outputStream = null;
@@ -18,25 +24,34 @@ public abstract class DataHandler implements Runnable{
 
     private boolean running = false;
 
-    public DataHandler(Socket socket){
+    public SocketHandler(Socket socket, PacketHandler handler){
         this.socket = socket;
-        this.start();
+        this.handler = handler;
+        this.launch();
     }
-
-    public abstract void handle(NetPacket packet);
 
     @Override
     public void run(){
         while(true){
             try{
-                byte length = inputStream.readNBytes(1)[0];
+                int length = inputStream.readNBytes(1)[0];
+
+                if((length & 0b10000000) == 0b10000000){ // Large packets
+                    byte[] len = inputStream.readNBytes(3);
+                    length = ((length & 0b01111111) << 24) | (len[0] << 16) | (len[1] << 8) | (len[2]);
+                }
+
+                System.out.println(length);
+
                 byte[] data = inputStream.readNBytes(length);
                 if(data.length > 1) {
                     NetPacket packet = packetIndex[data[0]].getDeclaredConstructor(byte[].class).newInstance(data);
-                    handle(packet);
+                    System.out.println(Arrays.toString(data));
+                    handler.handle(this, packet);
                 }
             }catch (Exception e){
-                e.printStackTrace();
+                System.out.println("["+socket.getInetAddress().toString()+"] Connection lost.");
+                break;
             }
         }
     }
@@ -44,8 +59,21 @@ public abstract class DataHandler implements Runnable{
     public boolean send(NetPacket packet){
         if(running){
             try {
+                byte[] data = packet.encode();
+                int flagMask = 0b10000000;
+                if(data.length < 128){ // Small packets
+                    outputStream.write(new byte[]{(byte) data.length});
+                }else { // Large packets
+                    byte[] len = new byte[4];
+                    len[0] = (byte) ((data.length >> 24) | flagMask);
+                    len[1] = (byte) (data.length >> 16);
+                    len[2] = (byte) (data.length >> 8);
+                    len[3] = (byte) (data.length);
+                    outputStream.write(len);
+                }
                 outputStream.write(packet.encode());
                 outputStream.flush();
+                return true;
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -61,10 +89,9 @@ public abstract class DataHandler implements Runnable{
         }
     }
 
-    public void start(){
+    public void launch(){
         if(!running && !socket.isClosed() && socket.isConnected()){
             try {
-                BufferedInputStream
                 inputStream = new BufferedInputStream(socket.getInputStream());
                 outputStream = new BufferedOutputStream(socket.getOutputStream());
                 listen();
@@ -75,7 +102,7 @@ public abstract class DataHandler implements Runnable{
         }
     }
 
-    public void stop(){
+    public void shutdown(){
         if(running){
             try {
                 outputStream.close();
@@ -83,6 +110,7 @@ public abstract class DataHandler implements Runnable{
                 if(listeningThread.isAlive())
                     listeningThread.interrupt();
                 listeningThread = null;
+                socket.close();
                 running = false;
             } catch (IOException e) {
                 e.printStackTrace();

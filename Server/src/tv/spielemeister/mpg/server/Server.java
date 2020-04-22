@@ -1,8 +1,12 @@
 package tv.spielemeister.mpg.server;
 
 import tv.spielemeister.mpg.engine.config.Config;
+import tv.spielemeister.mpg.engine.net.packets.PacketHandshakeRequest;
+import tv.spielemeister.mpg.engine.net.packets.PacketByteInformation;
 import tv.spielemeister.mpg.engine.world.Location;
 import tv.spielemeister.mpg.engine.world.entity.Entity;
+import tv.spielemeister.mpg.server.net.GameServerSocket;
+import tv.spielemeister.mpg.server.net.ServerSocketHandler;
 import tv.spielemeister.mpg.server.world.WorldManager;
 
 import java.io.*;
@@ -11,18 +15,23 @@ import java.util.*;
 public class Server {
 
     private static Server instance;
+    private GameServerSocket serverSocket;
 
     private Config config;
 
-    private File worldsDirectory, entityDirectory;
-    private RandomAccessFile globalData;
+    private File worldsDirectory, entityDirectory, globalData;
 
     private WorldManager worldManager;
 
     private HashMap<Entity, File> loadedEntities = new HashMap<>(); // Entity & Last file (for saving)
 
-    // Global data:
+    public static void main(String[] args){
+        new Server();
+    }
+
+    // Global data
     private long entityCount = 0; // At position 0 in global data file
+    private HashMap<String, String> loginData;
 
     public Server(){
         instance = this;
@@ -30,6 +39,49 @@ public class Server {
         setupFiles();
         initData();
         worldManager = new WorldManager(worldsDirectory, config.getProperty("Overworld world name"));
+        serverSocket = new GameServerSocket(12345, (handler, netPacket) -> {
+            ServerSocketHandler socket = (ServerSocketHandler) handler;
+
+            switch(netPacket.packetType){
+                case 0: { // Handshake
+                        PacketHandshakeRequest packet = (PacketHandshakeRequest) netPacket;
+                        String prove = packet.username + packet.password;
+                        System.out.println(packet.username + ", " + packet.password);
+                        if(prove.contains("=") || prove.contains("\n")){
+                            socket.send(new PacketByteInformation((byte) 2));
+                        } else
+                        if (!socket.loggedIn) {
+                            String password = loginData.get(packet.username);
+                            if (password == null) {
+                                socket.send(new PacketByteInformation((byte) 1));
+                            } else {
+                                if (password.equals(packet.password)) {
+                                    socket.loggedIn = true;
+                                } else {
+                                    socket.send(new PacketByteInformation((byte) 0));
+                                    socket.shutdown();
+                                }
+                            }
+                        }
+                    } break;
+                case 1: { // Handle simple information
+                    PacketByteInformation packet = (PacketByteInformation) netPacket;
+                    switch(packet.data){
+                        case 0:
+                            if(socket.username != null && socket.password != null) {
+                                if (loginData.containsKey(socket.username)) {
+                                    socket.send(new PacketByteInformation((byte) 2));
+                                } else {
+                                    loginData.put(socket.username, socket.password);
+                                    writeGlobalDataFile();
+                                }
+                            }
+                            break;
+                    }
+                } break;
+            }
+        });
+
     }
 
     private void initConfig(){
@@ -43,23 +95,40 @@ public class Server {
 
     private void initData(){
         try {
-            globalData.seek(0);
-            entityCount = globalData.readLong();
+            BufferedReader reader = new BufferedReader(new FileReader(globalData));
+            loginData = new HashMap<>();
+            String line;
+            for(int i = 0; (line = reader.readLine()) != null; i++){
+                switch (i){
+                    case 0:
+                        entityCount = Long.parseLong(line);
+                        break;
+                    default:
+                        String[] data = line.split("=");
+                        loginData.put(data[0], data[1]);
+                        break;
+                }
+            }
+            reader.close();
         } catch (IOException e) {
-            entityCount = 0;
             e.printStackTrace();
         }
     }
 
-    public long getNewEntityID(){
-        incrementEntityCount();
+    private long getNewEntityID(){
+        entityCount++;
+        writeGlobalDataFile();
         return entityCount-1;
     }
 
-    private void incrementEntityCount(){
+    private void writeGlobalDataFile(){
         try {
-            globalData.seek(0);
-            globalData.writeLong(++entityCount);
+            PrintStream stream = new PrintStream(globalData);
+            stream.println(entityCount);
+            for(String username : loginData.keySet()){
+                stream.println(username+"="+loginData.get(username));
+            }
+            stream.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -77,10 +146,9 @@ public class Server {
             System.exit(0);
         }
         try{
-            File data = new File(worldsDirectory, "global_data");
-            if(!data.exists())
-                data.createNewFile();
-            globalData = new RandomAccessFile(data, "rw");
+            globalData = new File(worldsDirectory, "global_data");
+            if(!globalData.exists())
+                globalData.createNewFile();
             entityDirectory = new File(worldsDirectory, "entity_data");
             if(!entityDirectory.exists())
                 entityDirectory.mkdir();

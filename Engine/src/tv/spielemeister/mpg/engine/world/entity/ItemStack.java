@@ -2,8 +2,6 @@ package tv.spielemeister.mpg.engine.world.entity;
 
 import java.util.HashMap;
 
-import static tv.spielemeister.mpg.engine.Global.split;
-
 public class ItemStack {
 
     private int itemType, amount = 1;
@@ -58,16 +56,15 @@ public class ItemStack {
 
     public String serializeAttributes(){
         StringBuilder ret = new StringBuilder();
-        for(byte key : attributes.keySet())
-            ret.append(key).append(split).append(attributes.get(key)).append(split);
+        for(byte key : attributes.keySet()){
+            char c = (char) (key << 8 | attributes.get(key));
+            ret.append(c);
+        }
         return ret.toString();
     }
 
     public void parseAttributes(String attributes){
-        String[] arr = attributes.split(split);
-        this.attributes.clear();
-        for(int i = 0; i < arr.length-1; i+=2){
-            this.attributes.put(Byte.parseByte(arr[i]), Byte.parseByte(arr[i+1]));
-        }
+        for(char c : attributes.toCharArray())
+            this.attributes.put((byte)(c>>8), (byte)(c&0xff));
     }
 }
