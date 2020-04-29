@@ -5,7 +5,7 @@ public class Location extends Vector{
     private int world;
     private float rotation;
 
-    public Location(int world, double x, double y, float rotation){
+    public Location(int world, int x, int y, float rotation){
         super(x, y);
         this.world = world;
     }

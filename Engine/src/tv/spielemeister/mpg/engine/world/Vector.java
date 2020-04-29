@@ -2,9 +2,9 @@ package tv.spielemeister.mpg.engine.world;
 
 public class Vector {
 
-    private double x, y;
+    private int x, y;
 
-    public Vector(double x, double y){
+    public Vector(int x, int y){
         this.x = x;
         this.y = y;
     }
@@ -13,11 +13,6 @@ public class Vector {
         return Math.sqrt(x*x + y*y);
     }
 
-    public void normalize(){
-        double fac = 1 / getLength();
-        x *= fac;
-        y *= fac;
-    }
 
     public void add(Vector vector){
         x += vector.getX();
@@ -38,19 +33,19 @@ public class Vector {
         return (float) Math.atan2(y, x);
     }
 
-    public double getX() {
+    public int getX() {
         return x;
     }
 
-    public void setX(double x) {
+    public void setX(int x) {
         this.x = x;
     }
 
-    public double getY() {
+    public int getY() {
         return y;
     }
 
-    public void setY(double y) {
+    public void setY(int y) {
         this.y = y;
     }
 }

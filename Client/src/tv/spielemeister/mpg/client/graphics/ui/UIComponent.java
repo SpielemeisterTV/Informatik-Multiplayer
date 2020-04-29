@@ -6,7 +6,7 @@ import java.awt.*;
 
 public abstract class UIComponent {
 
-    public final boolean transparent; // Defines, if the world should still be rendered or not
+    public final boolean transparent; // Defines, if the world behind it should still be rendered
 
     private boolean updated = false;
 
@@ -28,7 +28,5 @@ public abstract class UIComponent {
             window.UI = null;
         updated = false;
     }
-
-
 
 }

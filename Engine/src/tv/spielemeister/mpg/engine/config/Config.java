@@ -12,9 +12,7 @@ public class Config extends Properties{
                 file.createNewFile();
                 defaults.store(new FileOutputStream(file), null);
             }
-
             this.load(new FileInputStream(file));
-
         } catch (IOException e) {
             e.printStackTrace();
         }

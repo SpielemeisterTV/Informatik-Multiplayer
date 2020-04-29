@@ -5,7 +5,6 @@ import tv.spielemeister.mpg.engine.world.Vector;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.StandardOpenOption;
 import java.util.HashMap;
@@ -18,7 +17,7 @@ public class Entity {
 
     private String displayName = "";
     private int entityType;
-    private long id;
+    private final long id;
 
     private Location location;
     private Vector velocity;
@@ -44,11 +43,11 @@ public class Entity {
         entity.setDisplayName(entityData[1]);
         entity.entityType = Integer.parseInt(entityData[2]);
         location.setWorld(Integer.parseInt(entityData[3]));
-        location.setX(Double.parseDouble(entityData[4]));
-        location.setY(Double.parseDouble(entityData[5]));
+        location.setX(Integer.parseInt(entityData[4]));
+        location.setY(Integer.parseInt(entityData[5]));
         location.setRotation(Float.parseFloat(entityData[6]));
-        velocity.setX(Double.parseDouble(entityData[7]));
-        velocity.setY(Double.parseDouble(entityData[8]));
+        velocity.setX(Integer.parseInt(entityData[7]));
+        velocity.setY(Integer.parseInt(entityData[8]));
         entity.parseTags(entityData[9]);
         entity.handSlot = Integer.parseInt(entityData[10]);
 
