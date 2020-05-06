@@ -46,14 +46,16 @@ public class Server {
                 case 0: { // Handshake
                         PacketHandshakeRequest packet = (PacketHandshakeRequest) netPacket;
                         String prove = packet.username + packet.password;
-                        System.out.println(packet.username + ", " + packet.password);
-                        if(prove.contains("=") || prove.contains("\n")){
+                        if(prove.contains("=") || prove.contains("\n") || prove.contains(" ")
+                                || packet.password.equals("") || packet.username.equals("")){
                             socket.send(new PacketByteInformation((byte) 2));
                         } else
                         if (!socket.loggedIn) {
                             String password = loginData.get(packet.username);
                             if (password == null) {
                                 socket.send(new PacketByteInformation((byte) 1));
+                                socket.password = packet.password;
+                                socket.username = packet.username;
                             } else {
                                 if (password.equals(packet.password)) {
                                     socket.loggedIn = true;
@@ -72,6 +74,7 @@ public class Server {
                                 if (loginData.containsKey(socket.username)) {
                                     socket.send(new PacketByteInformation((byte) 2));
                                 } else {
+                                    System.out.println("Created new account!");
                                     loginData.put(socket.username, socket.password);
                                     writeGlobalDataFile();
                                 }
@@ -146,7 +149,7 @@ public class Server {
             System.exit(0);
         }
         try{
-            globalData = new File(worldsDirectory, "global_data");
+            globalData = new File(worldsDirectory, "global_data.txt");
             if(!globalData.exists())
                 globalData.createNewFile();
             entityDirectory = new File(worldsDirectory, "entity_data");

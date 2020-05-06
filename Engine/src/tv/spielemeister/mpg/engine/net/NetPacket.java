@@ -37,6 +37,16 @@ public abstract class NetPacket {
         }
     }
 
+
+    public static void put(byte[] arr, char[] val, int offset){
+        if(offset+val.length*2 <= arr.length)
+            for(int i = 0; i < val.length; i++) {
+                arr[i*2 + offset] = (byte) val[i];
+                arr[i*2 + offset + 1] = (byte) (val[i] >> 2);
+            }
+    }
+
+
     public static void put(byte[] arr, int val, int offset){
         if(offset + 7 < arr.length) {
             arr[offset] = (byte) (val >> 24);
@@ -50,6 +60,16 @@ public abstract class NetPacket {
         byte[] ret = new byte[len];
         if(offset+len <= arr.length){
             System.arraycopy(arr, offset, ret, 0, len);
+        }
+        return ret;
+    }
+
+    public static char[] getCharArray(byte[] arr, int offset, int len){
+        char[] ret = new char[len/2];
+        if(offset+len <= arr.length){
+            for(int i = 0; i < ret.length; i++){
+                ret[i] = (char) ((arr[offset + i*2 + 1]<<2) | arr[offset + i*2]);
+            }
         }
         return ret;
     }

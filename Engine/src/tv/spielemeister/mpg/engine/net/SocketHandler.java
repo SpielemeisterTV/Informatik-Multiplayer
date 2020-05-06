@@ -1,7 +1,9 @@
 package tv.spielemeister.mpg.engine.net;
 
+import tv.spielemeister.mpg.engine.net.packets.PacketEntityUpdate;
 import tv.spielemeister.mpg.engine.net.packets.PacketHandshakeRequest;
 import tv.spielemeister.mpg.engine.net.packets.PacketByteInformation;
+import tv.spielemeister.mpg.engine.net.packets.PacketWorldBlock;
 
 import java.io.*;
 import java.net.Socket;
@@ -11,7 +13,9 @@ public class SocketHandler implements Runnable{
 
     private static final Class<? extends NetPacket>[] packetIndex = new Class[]{
             PacketHandshakeRequest.class,
-            PacketByteInformation.class
+            PacketByteInformation.class,
+            PacketWorldBlock.class,
+            PacketEntityUpdate.class
     };
 
     public Socket socket;

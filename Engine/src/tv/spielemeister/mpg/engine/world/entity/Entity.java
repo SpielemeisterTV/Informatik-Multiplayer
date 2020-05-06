@@ -1,7 +1,6 @@
 package tv.spielemeister.mpg.engine.world.entity;
 
 import tv.spielemeister.mpg.engine.world.Location;
-import tv.spielemeister.mpg.engine.world.Vector;
 
 import java.io.File;
 import java.io.IOException;
@@ -20,13 +19,12 @@ public class Entity {
     private final long id;
 
     private Location location;
-    private Vector velocity;
 
     // A player can only see what other Entities have in their hand, not their whole hotbar
     private int handSlot = 0; // 0-7
     ItemStack[] hotbar = new ItemStack[8]; // 0-7
     // A player only knows about his own inventory
-    ItemStack[] inventory = new ItemStack[24]; // 3 * 8§
+    ItemStack[] inventory = new ItemStack[24]; // 3 * 8
 
     public Entity(int entityType, long id, Location location){
         this.entityType = entityType;
@@ -37,7 +35,6 @@ public class Entity {
     public static Entity load(String entityString){
         String[] entityData = entityString.split(linesplit);
         Location location = new Location(0, 0, 0, 0);
-        Vector velocity = new Vector(0, 0);
 
         Entity entity = new Entity(0, Long.parseLong(entityData[0]), null);
         entity.setDisplayName(entityData[1]);
@@ -46,16 +43,13 @@ public class Entity {
         location.setX(Integer.parseInt(entityData[4]));
         location.setY(Integer.parseInt(entityData[5]));
         location.setRotation(Float.parseFloat(entityData[6]));
-        velocity.setX(Integer.parseInt(entityData[7]));
-        velocity.setY(Integer.parseInt(entityData[8]));
-        entity.parseTags(entityData[9]);
-        entity.handSlot = Integer.parseInt(entityData[10]);
+        entity.parseTags(entityData[7]);
+        entity.handSlot = Integer.parseInt(entityData[8]);
 
         entity.setLocation(location);
-        entity.setVelocity(velocity);
 
-        for(int i = 0; i < (entityData.length-11)/6; i++){
-            int index = (entityData.length + 11) + (i * 6);
+        for(int i = 0; i < (entityData.length-9)/6; i++){
+            int index = (entityData.length) + (i * 6);
             int slot = Integer.parseInt(entityData[index++]);
             ItemStack itemStack = new ItemStack(Integer.parseInt(entityData[index++]));
             itemStack.setAmount(Integer.parseInt(entityData[index++]));
@@ -78,8 +72,6 @@ public class Entity {
         builder.append(location.getX()).append(linesplit);
         builder.append(location.getY()).append(linesplit);
         builder.append(location.getRotation()).append(linesplit);
-        builder.append(velocity.getX()).append(linesplit);
-        builder.append(velocity.getY()).append(linesplit);
         builder.append(serializeTags()).append(linesplit);
         builder.append(handSlot);
         for(int i = 0; i < 9; i++){
@@ -147,14 +139,6 @@ public class Entity {
 
     public void setLocation(Location location){
         this.location = location;
-    }
-
-    public Vector getVelocity(){
-        return velocity;
-    }
-
-    public void setVelocity(Vector velocity){
-        this.velocity = velocity;
     }
 
     public int getHandSlot(){
