@@ -18,4 +18,8 @@ public class Texture extends Resource{
         }
     }
 
+    public BufferedImage getImage(){
+        return image;
+    }
+
 }

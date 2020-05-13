@@ -1,7 +1,5 @@
 package tv.spielemeister.mpg.engine.world;
 
-import java.util.ArrayList;
-
 public class Block {
 
     /*
@@ -46,6 +44,18 @@ public class Block {
 
     public int getY(){
         return blockY;
+    }
+
+    public static int getId(char tile){
+        return tile & 0b1111111111;
+    }
+
+    public static int getOrientation(char tile){
+        return (tile >> 10) & 0b11;
+    }
+
+    public static int getData(char tile){
+        return (tile >> 12);
     }
 
 }

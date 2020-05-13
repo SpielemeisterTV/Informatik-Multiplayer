@@ -3,6 +3,8 @@ package tv.spielemeister.mpg.server;
 import tv.spielemeister.mpg.engine.config.Config;
 import tv.spielemeister.mpg.engine.net.packets.PacketHandshakeRequest;
 import tv.spielemeister.mpg.engine.net.packets.PacketByteInformation;
+import tv.spielemeister.mpg.engine.net.packets.PacketWorldBlock;
+import tv.spielemeister.mpg.engine.world.Block;
 import tv.spielemeister.mpg.engine.world.Location;
 import tv.spielemeister.mpg.engine.world.entity.Entity;
 import tv.spielemeister.mpg.server.net.GameServerSocket;
@@ -59,6 +61,14 @@ public class Server {
                             } else {
                                 if (password.equals(packet.password)) {
                                     socket.loggedIn = true;
+
+                                    Block block = new Block(0, 0);
+
+                                    block.setTile(0, 0, 0, (char) 0b0);
+
+                                    PacketWorldBlock blockPacket = new PacketWorldBlock(block);
+                                    socket.send(blockPacket);
+
                                 } else {
                                     socket.send(new PacketByteInformation((byte) 0));
                                     socket.shutdown();

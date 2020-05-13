@@ -32,6 +32,6 @@ public class PacketWorldBlock extends NetPacket {
         put(data, block.getX(), 1);
         put(data, block.getY(), 5);
         put(data, blockData, 9);
-        return new byte[0];
+        return data;
     }
 }

@@ -32,4 +32,7 @@ public class World { // 2**16 * 2**16 Blocks (65’536‬**2 = 4’294’967’2
         return blockCache.containsKey(x << 16 | y);
     }
 
+    public Block getBlock(int x, int y){
+        return blockCache.getOrDefault(x << 16 | y, null);
+    }
 }

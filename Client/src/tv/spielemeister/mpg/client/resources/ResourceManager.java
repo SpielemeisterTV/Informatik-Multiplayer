@@ -10,6 +10,8 @@ public class ResourceManager {
     private Texture[] textures;
     private Sound[] sounds;
 
+    public final int tileSize = 32;
+
     public void loadAllResources(File directory){
         if(directory.exists() && directory.isDirectory())
             loadAll(directory);
