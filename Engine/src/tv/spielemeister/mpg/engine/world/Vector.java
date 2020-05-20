@@ -14,6 +14,15 @@ public class Vector {
     }
 
 
+    public int getBlockX(){
+        return this.getX()/16;
+    }
+
+    public int getBlockY(){
+        return this.getY()/16;
+    }
+
+
     public void add(Vector vector){
         x += vector.getX();
         y += vector.getY();

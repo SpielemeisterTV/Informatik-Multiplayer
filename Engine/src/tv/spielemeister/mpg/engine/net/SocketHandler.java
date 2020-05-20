@@ -7,7 +7,7 @@ import tv.spielemeister.mpg.engine.net.packets.PacketWorldBlock;
 
 import java.io.*;
 import java.net.Socket;
-import java.util.Arrays;
+import java.net.SocketException;
 
 public class SocketHandler implements Runnable{
 
@@ -45,12 +45,11 @@ public class SocketHandler implements Runnable{
                     length = ((length & 0b01111111) << 24) | (len[0] << 16) | (len[1] << 8) | (len[2]);
                 }
 
-                System.out.println(length);
+                System.out.println("["+socket.getInetAddress().toString()+"] < " + length);
 
                 byte[] data = inputStream.readNBytes(length);
                 if(data.length > 1) {
                     NetPacket packet = packetIndex[data[0]].getDeclaredConstructor(byte[].class).newInstance(data);
-                    System.out.println(Arrays.toString(data));
                     handler.handle(this, packet);
                 }
             }catch (Exception e){
@@ -61,6 +60,9 @@ public class SocketHandler implements Runnable{
     }
 
     public boolean send(NetPacket packet){
+        if(socket.isClosed()){
+            shutdown();
+        } else
         if(running){
             try {
                 byte[] data = packet.encode();
@@ -79,7 +81,10 @@ public class SocketHandler implements Runnable{
                 outputStream.flush();
                 return true;
             } catch (IOException e) {
-                e.printStackTrace();
+                if(e instanceof SocketException)
+                    shutdown();
+                else
+                    e.printStackTrace();
             }
         }
         return false;
@@ -109,17 +114,21 @@ public class SocketHandler implements Runnable{
     public void shutdown(){
         if(running){
             try {
-                outputStream.close();
-                inputStream.close();
+                running = false;
                 if(listeningThread.isAlive())
                     listeningThread.interrupt();
                 listeningThread = null;
                 socket.close();
-                running = false;
+                inputStream = null;
+                outputStream = null;
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
+    }
+
+    public boolean isRunning(){
+        return this.running;
     }
 
 }

@@ -1,5 +1,8 @@
 package tv.spielemeister.mpg.client.input;
 
+import tv.spielemeister.mpg.client.graphics.GameWindow;
+import tv.spielemeister.mpg.engine.world.Vector;
+
 import javax.swing.event.MouseInputListener;
 import java.awt.*;
 import java.awt.event.KeyEvent;
@@ -16,6 +19,7 @@ public class InputHandler implements MouseInputListener, KeyListener {
         this.parent = parent;
         parent.addMouseMotionListener(this);
         parent.addMouseListener(this);
+        parent.addKeyListener(this);
     }
 
     @Override
@@ -61,7 +65,14 @@ public class InputHandler implements MouseInputListener, KeyListener {
 
     @Override
     public void keyPressed(KeyEvent e) {
-
+        if(e.getKeyCode() == KeyEvent.VK_RIGHT)
+            GameWindow.renderLocation.add(new Vector(1, 0));
+        if(e.getKeyCode() == KeyEvent.VK_LEFT)
+            GameWindow.renderLocation.add(new Vector(-1, 0));
+        if(e.getKeyCode() == KeyEvent.VK_DOWN)
+            GameWindow.renderLocation.add(new Vector(0, 1));
+        if(e.getKeyCode() == KeyEvent.VK_UP)
+            GameWindow.renderLocation.add(new Vector(0, -1));
     }
 
     @Override

@@ -62,12 +62,13 @@ public class Server {
                                 if (password.equals(packet.password)) {
                                     socket.loggedIn = true;
 
-                                    Block block = new Block(0, 0);
+                                    for (int x = 0; x < 20; x++)
+                                        for (int y = 0; y < 50; y++) {
+                                            Block block = new Block(x, y);
 
-                                    block.setTile(0, 0, 0, (char) 0b0);
-
-                                    PacketWorldBlock blockPacket = new PacketWorldBlock(block);
-                                    socket.send(blockPacket);
+                                            PacketWorldBlock blockPacket = new PacketWorldBlock(block);
+                                            socket.send(blockPacket);
+                                        }
 
                                 } else {
                                     socket.send(new PacketByteInformation((byte) 0));

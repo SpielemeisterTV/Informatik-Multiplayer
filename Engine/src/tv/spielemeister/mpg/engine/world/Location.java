@@ -22,14 +22,6 @@ public class Location extends Vector{
         return rotation;
     }
 
-    public int getBlockX(){
-        return (int)Math.floor(this.getX()/16);
-    }
-
-    public int getBlockY(){
-        return (int)Math.floor(this.getY()/16);
-    }
-
     public void setRotation(float rotation) {
         this.rotation = rotation;
     }
