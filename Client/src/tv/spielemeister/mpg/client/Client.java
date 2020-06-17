@@ -2,10 +2,7 @@ package tv.spielemeister.mpg.client;
 
 import tv.spielemeister.mpg.client.graphics.GameWindow;
 import tv.spielemeister.mpg.client.net.GameSocket;
-import tv.spielemeister.mpg.engine.net.packets.PacketByteInformation;
-import tv.spielemeister.mpg.engine.net.packets.PacketEntityUpdate;
-import tv.spielemeister.mpg.engine.net.packets.PacketHandshakeRequest;
-import tv.spielemeister.mpg.engine.net.packets.PacketWorldBlock;
+import tv.spielemeister.mpg.engine.net.packets.*;
 import tv.spielemeister.mpg.engine.world.World;
 import tv.spielemeister.mpg.engine.world.entity.Entity;
 
@@ -14,11 +11,14 @@ import java.util.HashMap;
 
 public class Client {
 
+    private static final int maxDistance = 40;
+
     private static GameWindow gameWindow;
     private static GameSocket socket;
 
-    public static World world = new World(); // Client only has one world, doesn't care about others
+    public static World world = new World(); // Client only stores one world, doesn't care about others
     public static HashMap<Long, Entity> entities = new HashMap<>();
+    public static Entity controlledEntity = null; // The currently controlled entity. Also contained in entities map
 
     public static void main(String[] args){
         Rectangle bounds = GraphicsEnvironment.getLocalGraphicsEnvironment().
@@ -53,12 +53,31 @@ public class Client {
                     PacketEntityUpdate packet = (PacketEntityUpdate) netPacket;
                     entities.put(packet.entity.getId(), packet.entity);
                 } break;
+                case 4: { // Load texture TODO: Add load textures
+
+                } break;
+                case 5: { // Teleport entity
+                    PacketEntityTeleport packet = (PacketEntityTeleport) netPacket;
+                    if(entities.containsKey(packet.entityId)){
+                        Entity entity = entities.get(packet.entityId);
+                        entity.setLocation(packet.newLoc);
+                        requestEntityUnload(entity);
+                    }
+                } break;
             }
         });
 
-        socket.socketHandler.send(new PacketHandshakeRequest("Name", "ey_dude"));
 
+        // TODO: Input << Username & Password
+        //socket.socketHandler.send(new PacketHandshakeRequest("Name", "ey_dude"));
+    }
 
+    public static void requestEntityUnload(Entity entity){ // Unloads an entity if it is too far away
+        if(entities.containsKey(entity.getId()))
+        if(controlledEntity == null
+                || controlledEntity.getLocation().distance(entity.getLocation()) >= maxDistance){
+            entities.remove(entity.getId());
+        }
     }
 
 }

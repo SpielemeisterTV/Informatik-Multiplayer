@@ -1,6 +1,8 @@
 package tv.spielemeister.mpg.server.net;
 
+import tv.spielemeister.mpg.engine.net.NetPacket;
 import tv.spielemeister.mpg.engine.net.PacketHandler;
+import tv.spielemeister.mpg.engine.net.SocketHandler;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -41,5 +43,10 @@ public class GameServerSocket implements Runnable {
                 break;
             }
         }
+    }
+
+    public void sendAll(NetPacket packet){
+        for(SocketHandler handler : ServerSocketHandler.handlers)
+            handler.send(packet);
     }
 }

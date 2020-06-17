@@ -12,6 +12,8 @@ import tv.spielemeister.mpg.engine.world.Vector;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferStrategy;
+import java.awt.image.BufferedImage;
+import java.awt.image.DataBufferInt;
 import java.io.File;
 
 public class GameWindow extends Canvas implements Runnable {
@@ -64,28 +66,30 @@ public class GameWindow extends Canvas implements Runnable {
         renderThread.start();
     }
 
-    private void renderWorld(Graphics2D graphics2D){
+    private void renderWorld(Graphics2D graphics){
         if(renderLocation != null){
             int blockX = renderLocation.getBlockX() - (hBlocks >> 1);
             int blockY = renderLocation.getBlockY() - (vBlocks >> 1);
-            blockX = Math.min(Math.max(blockX, 0), 65536-hBlocks);
-            blockY = Math.min(Math.max(blockY, 0), 65536-vBlocks);
-            for(int x = 0; x < hBlocks; x++) {
+            blockX = Math.min(Math.max(blockX, 0), 65536 - hBlocks);
+            blockY = Math.min(Math.max(blockY, 0), 65536 - vBlocks);
+            for (int x = 0; x <= hBlocks; x++) {
                 int sX = x * 16 * resourceManager.tileSize;
-                for (int y = 0; y < vBlocks; y++) {
+                for (int y = 0; y <= vBlocks; y++) {
                     Block block = Client.world.getBlock(x + blockX, y + blockY);
                     if (block != null) {
                         int sY = y * 16 * resourceManager.tileSize;
                         for (int tX = 0; tX < 16; tX++) {
                             int drawX = tX * resourceManager.tileSize + sX - hSub;
-                            for (int tY = 0; tY < 16; tY++) {
+                            if(drawX > -resourceManager.tileSize && drawX < bounds.width)
+                                for (int tY = 0; tY < 16; tY++) {
                                 int drawY = tY * resourceManager.tileSize + sY - vSub;
+                                if(drawY > -resourceManager.tileSize && drawY < bounds.height)
                                 for (int tZ = 0; tZ < 4; tZ++) {
                                     char tile = block.getTile(tX, tY, tZ);
-                                    if(tile!=1) {
+                                    if (tile != 1) {
                                         Texture texture = resourceManager.retrieveTexture(Block.getId(tile));
                                         if (texture != null) {
-                                            graphics2D.drawImage(texture.getImage(), drawX, drawY, null);
+                                            graphics.drawImage(texture.getImage(), drawX, drawY, null);
                                         }
                                     }
                                 }
@@ -94,8 +98,8 @@ public class GameWindow extends Canvas implements Runnable {
                     }
                 }
             }
-            graphics2D.setColor(Color.RED);
-        graphics2D.fillRect((renderLocation.getX()-(blockX*16))*resourceManager.tileSize-hSub,
+            graphics.setColor(Color.RED);
+            graphics.fillRect((renderLocation.getX()-(blockX*16))*resourceManager.tileSize-hSub,
                     (renderLocation.getY()-(blockY*16))*resourceManager.tileSize-vSub,
                     resourceManager.tileSize, resourceManager.tileSize);
         }
@@ -114,19 +118,31 @@ public class GameWindow extends Canvas implements Runnable {
     @Override
     public void run() {
         BufferStrategy strategy = null;
-        this.createBufferStrategy(2);
+        try {
+            this.createBufferStrategy(2,
+                    new BufferCapabilities(new ImageCapabilities(true),
+                            new ImageCapabilities(true), BufferCapabilities.FlipContents.BACKGROUND));
+        } catch (AWTException e) {
+            e.printStackTrace();
+        }
         int c = 0, s = 0;
         while(strategy == null) {
             strategy = this.getBufferStrategy();
         }
         Graphics2D graphics = (Graphics2D) strategy.getDrawGraphics();
+
+        // Rendering hints to increase rendering speed
+        graphics.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_SPEED);
+        graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
+        graphics.setRenderingHint(RenderingHints.KEY_COLOR_RENDERING, RenderingHints.VALUE_COLOR_RENDER_SPEED);
+        graphics.setRenderingHint(RenderingHints.KEY_ALPHA_INTERPOLATION, RenderingHints.VALUE_ALPHA_INTERPOLATION_SPEED);
         while(true){
             long start = System.nanoTime();
             render(graphics);
             strategy.show();
             s+= 1000000000 / (System.nanoTime()-start);
             c++;
-            if(c % 200 == 0){
+            if(c % 100 == 0){
                 System.out.println(s/c);
                 c = 0;
                 s = 0;

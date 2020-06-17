@@ -42,7 +42,7 @@ public class Entity {
         location.setWorld(Integer.parseInt(entityData[3]));
         location.setX(Integer.parseInt(entityData[4]));
         location.setY(Integer.parseInt(entityData[5]));
-        location.setRotation(Float.parseFloat(entityData[6]));
+        location.setRotation(Integer.parseInt(entityData[6]));
         entity.parseTags(entityData[7]);
         entity.handSlot = Integer.parseInt(entityData[8]);
 

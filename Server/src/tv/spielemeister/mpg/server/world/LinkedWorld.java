@@ -7,6 +7,7 @@ import tv.spielemeister.mpg.engine.world.World;
 import java.io.*;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Random;
 
 class LinkedWorld extends World {
 
@@ -28,9 +29,12 @@ class LinkedWorld extends World {
 
     private void initConfig(){
         Properties configDefaults = new Properties();
-        configDefaults.putAll(Map.ofEntries(
 
-        ));
+        // Generate random seed for world generation
+        Random random = new Random();
+        int seed = random.nextInt();
+
+        configDefaults.putAll(Map.of("seed", String.valueOf(seed)));
         config = new Config(new File(worldDir, "world.conf"), configDefaults);
         dataDir = new File(worldDir, "data");
         if(!dataDir.exists())

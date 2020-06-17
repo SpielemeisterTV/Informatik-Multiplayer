@@ -2,10 +2,9 @@ package tv.spielemeister.mpg.engine.world;
 
 public class Location extends Vector{
 
-    private int world;
-    private float rotation;
+    private int world, rotation;
 
-    public Location(int world, int x, int y, float rotation){
+    public Location(int world, int x, int y, int rotation){
         super(x, y);
         this.world = world;
     }
@@ -18,11 +17,11 @@ public class Location extends Vector{
         this.world = world;
     }
 
-    public float getRotation() { // Use getAngle for vector angle
+    public int getRotation() { // Use getAngle for vector angle
         return rotation;
     }
 
-    public void setRotation(float rotation) {
+    public void setRotation(int rotation) {
         this.rotation = rotation;
     }
 }

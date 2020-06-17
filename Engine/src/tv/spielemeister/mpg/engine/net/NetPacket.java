@@ -1,5 +1,8 @@
 package tv.spielemeister.mpg.engine.net;
 
+import tv.spielemeister.mpg.engine.world.Location;
+import tv.spielemeister.mpg.engine.world.Vector;
+
 import java.nio.charset.StandardCharsets;
 
 public abstract class NetPacket {
@@ -54,6 +57,33 @@ public abstract class NetPacket {
             arr[2+offset] = (byte) (val >> 8);
             arr[3+offset] = (byte) (val);
         }
+    }
+
+    public static void put(byte[] arr, Vector v, int offset){
+        put(arr, v.getX(), offset);
+        put(arr, v.getY(), offset+4);
+    }
+
+    public static void put(byte[] arr, Location l, int offset){
+        put(arr, (Vector) l, offset);
+        put(arr, l.getRotation(), offset + 8);
+        put(arr, l.getWorld(), offset + 12);
+    }
+
+    public static Vector getVector(byte[] arr, int offset){
+        if(offset + 7 < arr.length){
+            return new Vector(getInteger(arr, offset), getInteger(arr, offset+4));
+        }
+        return null;
+    }
+
+    public static Location getLocation(byte[] arr, int offset){
+        if(offset + 15 < arr.length){
+            Vector v = getVector(arr, offset);
+            return new Location(getInteger(arr, offset + 12),
+                    v.getX(), v.getY(), getInteger(arr, offset + 8));
+        }
+        return null;
     }
 
     public static byte[] get(byte[] arr, int offset, int len){

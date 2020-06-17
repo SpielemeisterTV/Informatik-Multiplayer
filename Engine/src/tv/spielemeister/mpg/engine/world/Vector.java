@@ -13,7 +13,6 @@ public class Vector {
         return Math.sqrt(x*x + y*y);
     }
 
-
     public int getBlockX(){
         return this.getX()/16;
     }
@@ -22,6 +21,11 @@ public class Vector {
         return this.getY()/16;
     }
 
+    public double distance(Vector vector){
+        double x = Math.abs(this.x - vector.x);
+        double y = Math.abs(this.y - vector.y);
+        return Math.sqrt(x*x + y*y);
+    }
 
     public void add(Vector vector){
         x += vector.getX();

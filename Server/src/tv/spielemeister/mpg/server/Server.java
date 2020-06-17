@@ -1,6 +1,7 @@
 package tv.spielemeister.mpg.server;
 
 import tv.spielemeister.mpg.engine.config.Config;
+import tv.spielemeister.mpg.engine.net.packets.PacketEntityTeleport;
 import tv.spielemeister.mpg.engine.net.packets.PacketHandshakeRequest;
 import tv.spielemeister.mpg.engine.net.packets.PacketByteInformation;
 import tv.spielemeister.mpg.engine.net.packets.PacketWorldBlock;
@@ -92,6 +93,11 @@ public class Server {
                             }
                             break;
                     }
+                } break;
+                case 5: {
+                    PacketEntityTeleport packet = (PacketEntityTeleport) netPacket;
+                    // TODO: Check if teleport is possible
+                    serverSocket.sendAll(packet);
                 } break;
             }
         });

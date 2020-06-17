@@ -1,9 +1,6 @@
 package tv.spielemeister.mpg.engine.net;
 
-import tv.spielemeister.mpg.engine.net.packets.PacketEntityUpdate;
-import tv.spielemeister.mpg.engine.net.packets.PacketHandshakeRequest;
-import tv.spielemeister.mpg.engine.net.packets.PacketByteInformation;
-import tv.spielemeister.mpg.engine.net.packets.PacketWorldBlock;
+import tv.spielemeister.mpg.engine.net.packets.*;
 
 import java.io.*;
 import java.net.Socket;
@@ -15,7 +12,9 @@ public class SocketHandler implements Runnable{
             PacketHandshakeRequest.class,
             PacketByteInformation.class,
             PacketWorldBlock.class,
-            PacketEntityUpdate.class
+            PacketEntityUpdate.class,
+            PacketTexture.class,
+            PacketEntityTeleport.class
     };
 
     public Socket socket;
