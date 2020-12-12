@@ -10,8 +10,8 @@ public abstract class NetPacket {
     public byte packetType;
 
     public NetPacket(byte[] data){
-        parse(data);
         this.packetType = data[0];
+        parse(data);
     }
 
     public NetPacket(byte packetType){
@@ -29,13 +29,13 @@ public abstract class NetPacket {
 
     public static void put(byte[] arr, long val, int offset){
         if(offset + 7 < arr.length) {
-            arr[offset] = (byte) (val >> 56);
-            arr[1+offset] = (byte) (val >> 48);
-            arr[2+offset] = (byte) (val >> 40);
-            arr[3+offset] = (byte) (val >> 32);
-            arr[4+offset] = (byte) (val >> 24);
-            arr[5+offset] = (byte) (val >> 16);
-            arr[6+offset] = (byte) (val >> 8);
+            arr[offset] = (byte) (val >>> 56);
+            arr[1+offset] = (byte) (val >>> 48);
+            arr[2+offset] = (byte) (val >>> 40);
+            arr[3+offset] = (byte) (val >>> 32);
+            arr[4+offset] = (byte) (val >>> 24);
+            arr[5+offset] = (byte) (val >>> 16);
+            arr[6+offset] = (byte) (val >>> 8);
             arr[7+offset] = (byte) (val);
         }
     }
@@ -45,16 +45,16 @@ public abstract class NetPacket {
         if(offset+val.length*2 <= arr.length)
             for(int i = 0; i < val.length; i++) {
                 arr[i*2 + offset] = (byte) val[i];
-                arr[i*2 + offset + 1] = (byte) (val[i] >> 2);
+                arr[i*2 + offset + 1] = (byte) (val[i] >>> 2);
             }
     }
 
 
     public static void put(byte[] arr, int val, int offset){
-        if(offset + 7 < arr.length) {
-            arr[offset] = (byte) (val >> 24);
-            arr[1+offset] = (byte) (val >> 16);
-            arr[2+offset] = (byte) (val >> 8);
+        if(offset + 4 <= arr.length) {
+            arr[offset] = (byte) (val >>> 24);
+            arr[1+offset] = (byte) (val >>> 16);
+            arr[2+offset] = (byte) (val >>> 8);
             arr[3+offset] = (byte) (val);
         }
     }
@@ -71,14 +71,14 @@ public abstract class NetPacket {
     }
 
     public static Vector getVector(byte[] arr, int offset){
-        if(offset + 7 < arr.length){
+        if(offset + 8 <= arr.length){
             return new Vector(getInteger(arr, offset), getInteger(arr, offset+4));
         }
         return null;
     }
 
     public static Location getLocation(byte[] arr, int offset){
-        if(offset + 15 < arr.length){
+        if(offset + 16 <= arr.length){
             Vector v = getVector(arr, offset);
             return new Location(getInteger(arr, offset + 12),
                     v.getX(), v.getY(), getInteger(arr, offset + 8));
@@ -109,25 +109,25 @@ public abstract class NetPacket {
     }
 
     public static long getLong(byte[] arr, int offset){
-        if(offset + 7 < arr.length){
-            return (long) arr[offset] << 56 |
-                    (long) arr[offset + 1] << 48 |
-                    (long) arr[offset + 2] << 40 |
-                    (long) arr[offset + 3] << 32 |
-                    arr[offset + 4] << 24 |
-                    arr[offset + 5] << 16 |
-                    arr[offset + 6] << 8 |
-                    arr[offset + 7];
+        if(offset + 8 <= arr.length){
+            return  (long)arr[offset] << 56 |
+                    (long)(arr[offset + 1] & 0xff) << 48 |
+                    (long)(arr[offset + 2] & 0xff) << 40 |
+                    (long)(arr[offset + 3] & 0xff) << 32 |
+                    (arr[offset + 4] & 0xff) << 24 |
+                    (arr[offset + 5] & 0xff) << 16 |
+                    (arr[offset + 6] & 0xff) << 8 |
+                    (arr[offset + 7] & 0xff);
         }
         return 0;
     }
 
     public static int getInteger(byte[] arr, int offset){
-        if(offset + 3 < arr.length){
+        if(offset + 4 <= arr.length){
             return arr[offset] << 24 |
-                    arr[1+offset] << 16 |
-                    arr[2+offset] << 8 |
-                    arr[3+offset];
+                    (arr[1+offset] & 0xff) << 16 |
+                    (arr[2+offset] & 0xff) << 8 |
+                    (arr[3+offset] & 0xff);
         }
         return 0;
     }

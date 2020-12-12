@@ -11,14 +11,14 @@ public class GameSocket {
     private Socket socket;
     public SocketHandler socketHandler;
 
-    public GameSocket(String host, int port, PacketHandler handler){
+    public GameSocket(String host, int port, PacketHandler packetHandler){
         try {
             socket = new Socket(host, port);
         } catch (IOException e) {
             e.printStackTrace();
             System.exit(0);
         }
-        socketHandler = new SocketHandler(socket, handler);
+        socketHandler = new SocketHandler(socket, packetHandler);
     }
 
 }

@@ -26,9 +26,10 @@ public class PacketEntityTeleport extends NetPacket {
 
     @Override
     public byte[] encode() {
-        byte[] arr = new byte[16];
-        put(arr, entityId, 0);
-        put(arr, newLoc, 8);
+        byte[] arr = new byte[17];
+        arr[0] = packetType;
+        put(arr, entityId, 1);
+        put(arr, newLoc, 9);
         return arr;
     }
 }

@@ -1,12 +1,10 @@
 package tv.spielemeister.mpg.server;
 
 import tv.spielemeister.mpg.engine.config.Config;
-import tv.spielemeister.mpg.engine.net.packets.PacketEntityTeleport;
-import tv.spielemeister.mpg.engine.net.packets.PacketHandshakeRequest;
-import tv.spielemeister.mpg.engine.net.packets.PacketByteInformation;
-import tv.spielemeister.mpg.engine.net.packets.PacketWorldBlock;
+import tv.spielemeister.mpg.engine.net.packets.*;
 import tv.spielemeister.mpg.engine.world.Block;
 import tv.spielemeister.mpg.engine.world.Location;
+import tv.spielemeister.mpg.engine.world.Physics;
 import tv.spielemeister.mpg.engine.world.entity.Entity;
 import tv.spielemeister.mpg.server.net.GameServerSocket;
 import tv.spielemeister.mpg.server.net.ServerSocketHandler;
@@ -41,7 +39,9 @@ public class Server {
         initConfig();
         setupFiles();
         initData();
-        worldManager = new WorldManager(worldsDirectory, config.getProperty("Overworld world name"));
+        worldManager = new WorldManager(worldsDirectory, config.getProperty("Overworld_name"));
+
+        // Packet handler
         serverSocket = new GameServerSocket(12345, (handler, netPacket) -> {
             ServerSocketHandler socket = (ServerSocketHandler) handler;
 
@@ -63,13 +63,29 @@ public class Server {
                                 if (password.equals(packet.password)) {
                                     socket.loggedIn = true;
 
-                                    for (int x = 0; x < 20; x++)
-                                        for (int y = 0; y < 50; y++) {
-                                            Block block = new Block(x, y);
+                                    // -------------------------- TEST --------------------------
+                                    try {
+                                        PacketTileInformation texture = new PacketTileInformation(
+                                                 new FileInputStream("C:/Users/flori/Desktop/Textures/grass.png"),
+                                                new Physics.PhysicsProperties(true, true,
+                                                        true, true, 1000),
+                                                0);
+                                        socket.send(texture);
+                                    } catch (FileNotFoundException e) {
+                                        e.printStackTrace();
+                                    }
 
+                                    for (int x = 0; x < 4; x++)
+                                        for (int y = 0; y < 3; y++) {
+                                            Block block = new Block(x, y);
+                                            for(int tx = 0; tx < 16; tx++)
+                                            for(int ty = 0; ty < 16; ty++)
+                                            for(int tz = 0; tz < 1; tz++)
+                                                block.setTile(tx, ty, tz, (char)0b0000000000000001);
                                             PacketWorldBlock blockPacket = new PacketWorldBlock(block);
                                             socket.send(blockPacket);
                                         }
+                                    // -------------------------------------------------------------
 
                                 } else {
                                     socket.send(new PacketByteInformation((byte) 0));
@@ -102,15 +118,16 @@ public class Server {
             }
         });
 
+
     }
 
     private void initConfig(){
         Properties configDefaults = new Properties();
         configDefaults.putAll(Map.ofEntries(
-                Map.entry("Worlds directory", "worlds"),
-                Map.entry("Overworld world name", "Overworld")
+                Map.entry("Worlds_directory", "worlds"),
+                Map.entry("Overworld_name", "Overworld")
         ));
-        config = new Config(new File("server.config"), configDefaults);
+        config = new Config(new File("server.properties"), configDefaults);
     }
 
     private void initData(){
@@ -155,7 +172,7 @@ public class Server {
     }
 
     private void setupFiles(){
-        worldsDirectory = new File(config.getProperty("Worlds directory"));
+        worldsDirectory = new File(config.getProperty("Worlds_directory"));
         if(!worldsDirectory.exists())
             if(!worldsDirectory.mkdirs()) {
                 System.err.println("Worlds directory could not be created!");

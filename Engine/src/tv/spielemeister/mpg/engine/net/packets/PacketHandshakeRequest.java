@@ -2,13 +2,11 @@ package tv.spielemeister.mpg.engine.net.packets;
 
 import tv.spielemeister.mpg.engine.net.NetPacket;
 
-import java.util.Arrays;
-
 public class PacketHandshakeRequest extends NetPacket {
 
     public String username, password;
 
-    public PacketHandshakeRequest(byte[] data) {
+    public PacketHandshakeRequest(byte[] data){
         super(data);
     }
 
@@ -29,7 +27,6 @@ public class PacketHandshakeRequest extends NetPacket {
     public byte[] encode() {
         byte[] usernameBytes = encodeString(username), passwordBytes = encodeString(password);
         byte[] ret = new byte[2 + usernameBytes.length + passwordBytes.length];
-        System.out.println(Arrays.toString(passwordBytes));
         ret[0] = 0;
         ret[1] = (byte) (usernameBytes.length & 0xff);
         put(ret, usernameBytes, 2);

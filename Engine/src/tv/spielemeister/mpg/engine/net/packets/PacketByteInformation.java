@@ -1,6 +1,7 @@
 package tv.spielemeister.mpg.engine.net.packets;
 
 import tv.spielemeister.mpg.engine.net.NetPacket;
+import tv.spielemeister.mpg.engine.net.SocketHandler;
 
 public class PacketByteInformation extends NetPacket {
 
@@ -32,5 +33,4 @@ public class PacketByteInformation extends NetPacket {
     public byte[] encode() {
         return new byte[]{packetType, data};
     }
-
 }

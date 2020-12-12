@@ -25,6 +25,7 @@ public class Client {
                 getDefaultScreenDevice().getDefaultConfiguration().getBounds();
         gameWindow = new GameWindow(bounds);
 
+        // Packet handler
         socket = new GameSocket("localhost", 12345, (socket, netPacket) -> {
             switch(netPacket.packetType){
                 case 1: { // Handle simple information
@@ -36,8 +37,8 @@ public class Client {
                             break;
                         case 1:
                             System.out.println("Create new account?");
-                            socket.send(new PacketByteInformation((byte) 0));
                             // TODO: Ask to create new account, send 0 if so
+                            socket.send(new PacketByteInformation((byte) 0));
                             break;
                         case 2:
                             System.out.println("Invalid username/password");
@@ -50,10 +51,10 @@ public class Client {
                     world.loadBlock(packet.block);
                 } break;
                 case 3: { // Handle Entity updates
-                    PacketEntityUpdate packet = (PacketEntityUpdate) netPacket;
+                    PacketEntity packet = (PacketEntity) netPacket;
                     entities.put(packet.entity.getId(), packet.entity);
                 } break;
-                case 4: { // Load texture TODO: Add load textures
+                case 4: { // Handle files
 
                 } break;
                 case 5: { // Teleport entity
@@ -64,12 +65,22 @@ public class Client {
                         requestEntityUnload(entity);
                     }
                 } break;
+                case 6: { // Load textures
+                    PacketTileInformation packet = (PacketTileInformation) netPacket;
+                    GameWindow.textures[packet.id] = packet.getImage();
+                } break;
             }
         });
 
 
         // TODO: Input << Username & Password
-        //socket.socketHandler.send(new PacketHandshakeRequest("Name", "ey_dude"));
+        socket.socketHandler.send(new PacketHandshakeRequest("Name", "ey_dude"));
+
+        try {
+            Thread.sleep(1000000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
     public static void requestEntityUnload(Entity entity){ // Unloads an entity if it is too far away

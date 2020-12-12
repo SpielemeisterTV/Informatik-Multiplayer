@@ -1,13 +1,21 @@
 package tv.spielemeister.mpg.engine.world;
 
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class World { // 2**16 * 2**16 Blocks (65’536‬**2 = 4’294’967’296‬)
 
-    protected HashMap<Integer, Block> blockCache = new HashMap<>(32);
+    protected ConcurrentHashMap<Integer, Block> blockCache = new ConcurrentHashMap<>(32);
+
+    protected HashMap<Integer, Block> queue = new HashMap<>();
 
     public void loadBlock(Block block) {
         blockCache.put(block.getX() << 16 | block.getY(), block);
+    }
+
+    public Iterator<Block> getBlockIterator(){
+        return blockCache.values().iterator();
     }
 
     public void loadBlock(int x, int y, char[] blockData) {

@@ -3,8 +3,6 @@ package tv.spielemeister.mpg.client.graphics;
 import tv.spielemeister.mpg.client.Client;
 import tv.spielemeister.mpg.client.graphics.ui.UIComponent;
 import tv.spielemeister.mpg.client.input.InputHandler;
-import tv.spielemeister.mpg.client.resources.ResourceManager;
-import tv.spielemeister.mpg.client.resources.Texture;
 import tv.spielemeister.mpg.engine.world.Block;
 import tv.spielemeister.mpg.engine.world.Location;
 import tv.spielemeister.mpg.engine.world.Vector;
@@ -13,25 +11,25 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferStrategy;
 import java.awt.image.BufferedImage;
-import java.awt.image.DataBufferInt;
-import java.io.File;
+import java.util.Iterator;
 
 public class GameWindow extends Canvas implements Runnable {
 
+    // Indexed textures
+    public static final BufferedImage[] textures = new BufferedImage[511]; // 511 because 0=non textured
+
+    public static final int tileSize = 32;
+
     private static final Color BACKGROUND = new Color(15, 0, 30);
 
-    private JFrame frame;
-    private InputHandler inputHandler;
+    private final JFrame frame;
+    private final InputHandler inputHandler;
 
     public UIComponent UI = null;
 
-    private Rectangle bounds;
+    private final Rectangle bounds;
 
-    private final int vBlocks, hBlocks, vSub, hSub;
-
-    private ResourceManager resourceManager;
-
-    public static Vector renderLocation = new Location(0, 0, 0, 0);
+    public static Vector renderLocation = new Vector(10, 10);
 
     public GameWindow(Rectangle bounds){
         this.bounds = bounds;
@@ -43,19 +41,7 @@ public class GameWindow extends Canvas implements Runnable {
         frame.setTitle("Game");
         frame.add(this);
 
-        resourceManager = new ResourceManager();
-        resourceManager.loadAllResources(new File("C:/Users/flori/Desktop/Resources"));
-
         inputHandler = new InputHandler(this);
-
-        final double hB = bounds.width / (resourceManager.tileSize * 16d);
-        final double vB = bounds.height / (resourceManager.tileSize * 16d);
-
-        hSub = (int) Math.round((1 - (( hB - 1 ) /2d) %1) * resourceManager.tileSize * 16);
-        vSub = (int) Math.round((1 - (( vB - 1 ) /2d) %1) * resourceManager.tileSize * 16);
-
-        hBlocks = (int) Math.ceil(hB);
-        vBlocks = (int) Math.ceil(vB);
 
         frame.setVisible(true);
 
@@ -68,40 +54,27 @@ public class GameWindow extends Canvas implements Runnable {
 
     private void renderWorld(Graphics2D graphics){
         if(renderLocation != null){
-            int blockX = renderLocation.getBlockX() - (hBlocks >> 1);
-            int blockY = renderLocation.getBlockY() - (vBlocks >> 1);
-            blockX = Math.min(Math.max(blockX, 0), 65536 - hBlocks);
-            blockY = Math.min(Math.max(blockY, 0), 65536 - vBlocks);
-            for (int x = 0; x <= hBlocks; x++) {
-                int sX = x * 16 * resourceManager.tileSize;
-                for (int y = 0; y <= vBlocks; y++) {
-                    Block block = Client.world.getBlock(x + blockX, y + blockY);
-                    if (block != null) {
-                        int sY = y * 16 * resourceManager.tileSize;
-                        for (int tX = 0; tX < 16; tX++) {
-                            int drawX = tX * resourceManager.tileSize + sX - hSub;
-                            if(drawX > -resourceManager.tileSize && drawX < bounds.width)
-                                for (int tY = 0; tY < 16; tY++) {
-                                int drawY = tY * resourceManager.tileSize + sY - vSub;
-                                if(drawY > -resourceManager.tileSize && drawY < bounds.height)
-                                for (int tZ = 0; tZ < 4; tZ++) {
-                                    char tile = block.getTile(tX, tY, tZ);
-                                    if (tile != 1) {
-                                        Texture texture = resourceManager.retrieveTexture(Block.getId(tile));
-                                        if (texture != null) {
-                                            graphics.drawImage(texture.getImage(), drawX, drawY, null);
-                                        }
-                                    }
-                                }
+            Iterator<Block> iterator = Client.world.getBlockIterator();
+            while(iterator.hasNext()){
+                Block block = iterator.next();
+                char[] data = block.getBlockData();
+                for(int i = 0; i < 1024; i++){
+                    char tile = data[i];
+                    int type = Block.getType(tile);
+                    if(type != 0){
+                        int y = ((i & 0b1111) + 16 * block.getY()) << 5; // Add player y and y offset
+                        if(y > -tileSize && y < bounds.height){
+                            int x = (((i >> 4) & 0b1111) + 16 * block.getX()) << 5; // Add player x and x offset
+                            if(x > -tileSize  && x < bounds.width){
+                                BufferedImage texture = textures[type-1];
+                                if(texture!=null)
+                                    graphics.drawImage(texture, x, y, null);
                             }
                         }
+
                     }
                 }
             }
-            graphics.setColor(Color.RED);
-            graphics.fillRect((renderLocation.getX()-(blockX*16))*resourceManager.tileSize-hSub,
-                    (renderLocation.getY()-(blockY*16))*resourceManager.tileSize-vSub,
-                    resourceManager.tileSize, resourceManager.tileSize);
         }
     }
 
@@ -142,8 +115,8 @@ public class GameWindow extends Canvas implements Runnable {
             strategy.show();
             s+= 1000000000 / (System.nanoTime()-start);
             c++;
-            if(c % 100 == 0){
-                System.out.println(s/c);
+            if(c % 300 == 0){
+                System.out.println("FPS:" + (s/c));
                 c = 0;
                 s = 0;
             }

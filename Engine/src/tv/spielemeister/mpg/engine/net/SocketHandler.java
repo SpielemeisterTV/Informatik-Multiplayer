@@ -12,9 +12,11 @@ public class SocketHandler implements Runnable{
             PacketHandshakeRequest.class,
             PacketByteInformation.class,
             PacketWorldBlock.class,
-            PacketEntityUpdate.class,
-            PacketTexture.class,
-            PacketEntityTeleport.class
+            PacketEntity.class,
+            PacketFile.class,
+            PacketEntityTeleport.class,
+            PacketTileInformation.class,
+            PacketChatMessage.class
     };
 
     public Socket socket;
@@ -37,48 +39,35 @@ public class SocketHandler implements Runnable{
     public void run(){
         while(true){
             try{
-                int length = inputStream.readNBytes(1)[0];
+                byte[] len = inputStream.readNBytes(4);
+                int length = NetPacket.getInteger(len, 0);
 
-                if((length & 0b10000000) == 0b10000000){ // Large packets
-                    byte[] len = inputStream.readNBytes(3);
-                    length = ((length & 0b01111111) << 24) | (len[0] << 16) | (len[1] << 8) | (len[2]);
-                }
-
-                System.out.println("["+socket.getInetAddress().toString()+"] < " + length);
+                System.out.println("["+socket.getInetAddress().toString()+"] > " + length+"b");
 
                 byte[] data = inputStream.readNBytes(length);
-                if(data.length > 1) {
-                    NetPacket packet = packetIndex[data[0]].getDeclaredConstructor(byte[].class).newInstance(data);
-                    handler.handle(this, packet);
-                }
+                NetPacket packet = packetIndex[data[0]].getDeclaredConstructor(byte[].class).newInstance(data);
+                handler.handle(this, packet);
             }catch (Exception e){
+                // e.printStackTrace();
                 System.out.println("["+socket.getInetAddress().toString()+"] Connection lost.");
                 break;
             }
         }
     }
 
-    public boolean send(NetPacket packet){
+    public void send(NetPacket packet){
         if(socket.isClosed()){
             shutdown();
         } else
         if(running){
             try {
                 byte[] data = packet.encode();
-                int flagMask = 0b10000000;
-                if(data.length < 128){ // Small packets
-                    outputStream.write(new byte[]{(byte) data.length});
-                }else { // Large packets
-                    byte[] len = new byte[4];
-                    len[0] = (byte) ((data.length >> 24) | flagMask);
-                    len[1] = (byte) (data.length >> 16);
-                    len[2] = (byte) (data.length >> 8);
-                    len[3] = (byte) (data.length);
-                    outputStream.write(len);
-                }
-                outputStream.write(packet.encode());
+                byte[] len = new byte[4];
+                NetPacket.put(len, data.length, 0);
+                outputStream.write(len);
+                outputStream.write(data);
                 outputStream.flush();
-                return true;
+                System.out.println("["+socket.getInetAddress().toString()+"] < " + data.length + "b, type="+packet.packetType);
             } catch (IOException e) {
                 if(e instanceof SocketException)
                     shutdown();
@@ -86,7 +75,6 @@ public class SocketHandler implements Runnable{
                     e.printStackTrace();
             }
         }
-        return false;
     }
 
     private void listen(){
